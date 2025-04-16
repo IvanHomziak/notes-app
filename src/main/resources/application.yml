@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: notes
+
+  security:
+    user:
+      name: admin
+      password: admin
+
+  # MySQL
+  sql:
+    init:
+      platform: mysql
+      mode: always
+  datasource:
+    url: jdbc:mysql://localhost:3307/${DB_NAME:securenotes}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    username: ${DB_USER:root}
+    password: ${DB_PASS:admin1234}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+      hibernate:
+        SQL: DEBUG
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE
