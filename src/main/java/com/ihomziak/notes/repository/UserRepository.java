@@ -10,5 +10,7 @@ import com.ihomziak.notes.models.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 	Optional<User> findByUserName(String username);
+
+	Boolean existsByUserName(String username);
 }
 
