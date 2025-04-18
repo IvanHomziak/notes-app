@@ -1,6 +1,7 @@
 package com.ihomziak.notes.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,6 +40,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 
+//	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@Override
 	public UserDTO getUserById(Long id) {
 		//        return userRepository.findById(id).orElseThrow();
