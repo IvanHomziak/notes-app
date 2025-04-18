@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.ihomziak.notes.models.AppRole;
 import com.ihomziak.notes.models.Role;
@@ -29,15 +31,27 @@ import com.ihomziak.notes.repository.UserRepository;
 	jsr250Enabled = true
 )
 public class SecurityConfig {
+
 	@Bean
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+		http.csrf(csrf ->
+			csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+				.ignoringRequestMatchers("/api/auth/public/**")
+		);
+//		http.csrf(AbstractHttpConfigurer::disable);
+
 		http.authorizeHttpRequests((requests)
 			-> requests
 			.requestMatchers("/api/admin/**").hasRole("ADMIN")
+			.requestMatchers("/api/csrf-token").permitAll()
 			.requestMatchers("/public/**").permitAll()
 			.anyRequest().authenticated()
 		);
-		http.csrf(AbstractHttpConfigurer::disable);
+		// Custom filters can be added here
+		//		http.addFilterBefore(new CustomLoggingFilter(),
+		//			UsernamePasswordAuthenticationFilter.class);
+		//		http.addFilterAfter(new RequestValidationFilter(), CustomLoggingFilter.class);
+
 		//http.formLogin(withDefaults());
 		http.httpBasic(withDefaults());
 		return http.build();
