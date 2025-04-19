@@ -2,7 +2,7 @@ spring:
   application:
     name: notes
   app:
-    jwtSecret: mySecretjdhsd87123hjkb3123mqws#41#!$#6&&^!&*989ewqwi99a9d0asfjdanskldn!^23423lk423nk4l2n34kl23fde0w0-e9r-we
+    jwtSecret: mySecretKey123912738aopsgjnspkmndfsopkvajoirjg94gf2opfng2moknm
     jwtExpirationMs: 172800000
   security:
     user:

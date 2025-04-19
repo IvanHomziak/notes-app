@@ -33,7 +33,6 @@ public class AuthController {
 	@Autowired
 	private JwtUtils jwtUtils;
 
-	// AuthController.java
 	@PostMapping("/public/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
 		Authentication authentication;
@@ -47,7 +46,7 @@ public class AuthController {
 			return new ResponseEntity<Object>(map, HttpStatus.NOT_FOUND);
 		}
 
-		//      set the authentication
+		// Set the authentication
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
 		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
