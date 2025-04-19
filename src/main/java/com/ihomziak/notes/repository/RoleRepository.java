@@ -11,5 +11,4 @@ import com.ihomziak.notes.models.Role;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
 	Optional<Role> findByRoleName(AppRole appRole);
-
 }

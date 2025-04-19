@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.ihomziak.notes.dto.UserDTO;
 import com.ihomziak.notes.models.AppRole;
@@ -66,5 +67,11 @@ public class UserServiceImpl implements UserService {
 			user.getCreatedDate(),
 			user.getUpdatedDate()
 		);
+	}
+
+	@Override
+	public User findByUsername(String username) {
+		Optional<User> user = userRepository.findByUserName(username);
+		return user.orElseThrow(() -> new RuntimeException("User not found with username: " + username));
 	}
 }
