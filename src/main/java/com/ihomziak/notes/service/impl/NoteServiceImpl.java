@@ -12,8 +12,14 @@ import java.util.List;
 @Service
 public class NoteServiceImpl implements NoteService {
 
-	@Autowired
 	private NoteRepository noteRepository;
+	private AuditLogServiceImpl auditLogService;
+
+	@Autowired
+	public NoteServiceImpl(NoteRepository noteRepository, AuditLogServiceImpl auditLogService) {
+		this.noteRepository = noteRepository;
+		this.auditLogService = auditLogService;
+	}
 
 	@Override
 	public Note createNoteForUser(String username, String content) {
@@ -21,6 +27,7 @@ public class NoteServiceImpl implements NoteService {
 		note.setContent(content);
 		note.setOwnerUsername(username);
 		Note savedNote = noteRepository.save(note);
+		auditLogService.logNoteCreation(username, savedNote);
 		return savedNote;
 	}
 
@@ -30,12 +37,16 @@ public class NoteServiceImpl implements NoteService {
 			-> new RuntimeException("Note not found"));
 		note.setContent(content);
 		Note updatedNote = noteRepository.save(note);
+		auditLogService.logNoteUpdate(username, updatedNote);
 		return updatedNote;
 	}
 
 	@Override
 	public void deleteNoteForUser(Long noteId, String username) {
-		noteRepository.deleteById(noteId);
+		Note note = noteRepository.findById(noteId).orElseThrow(()
+			-> new RuntimeException("Note not found"));
+		auditLogService.logNoteDeletion(username, note.getId());
+		noteRepository.delete(note);
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package com.ihomziak.notes.config;
+package com.ihomziak.notes.security;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
