@@ -36,3 +36,6 @@ logging:
           descriptor:
             sql:
               BasicBinder: TRACE
+
+frontend:
+  url: http://localhost:3000
