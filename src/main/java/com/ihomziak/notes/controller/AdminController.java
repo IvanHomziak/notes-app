@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ihomziak.notes.dto.UserDTO;
+import com.ihomziak.notes.models.Role;
 import com.ihomziak.notes.models.User;
-import com.ihomziak.notes.service.UserService;
+import com.ihomziak.notes.repository.RoleRepository;
+import com.ihomziak.notes.service.impl.UserServiceImpl;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -23,25 +25,65 @@ import com.ihomziak.notes.service.UserService;
 public class AdminController {
 
 	@Autowired
-	UserService userService;
+	private UserServiceImpl userServiceImpl;
+
+	@Autowired
+	private RoleRepository roleRepository;
 
 	//	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@GetMapping("/getusers")
 	public ResponseEntity<List<User>> getAllUsers() {
-		return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
+		return new ResponseEntity<>(userServiceImpl.getAllUsers(), HttpStatus.OK);
 	}
 
 	@PutMapping("/update-role")
 	public ResponseEntity<String> updateUserRole(@RequestParam Long userId,
 		@RequestParam String roleName) {
-		userService.updateUserRole(userId, roleName);
+		userServiceImpl.updateUserRole(userId, roleName);
 		return ResponseEntity.ok("User role updated");
 	}
 
 	@GetMapping("/user/{id}")
 	public ResponseEntity<UserDTO> getUser(@PathVariable Long id) {
-		return new ResponseEntity<>(userService.getUserById(id), HttpStatus.OK);
+		return new ResponseEntity<>(userServiceImpl.getUserById(id), HttpStatus.OK);
 	}
 
+	@PutMapping("/update-lock-status")
+	public ResponseEntity<String> updateAccountLockStatus(@RequestParam Long userId, @RequestParam boolean lock) {
+		userServiceImpl.updateAccountLockStatus(userId, lock);
+		return ResponseEntity.ok("Account lock status updated");
+	}
 
+	@GetMapping("/roles")
+	public List<Role> getAllRoles() {
+		return roleRepository.findAll();
+	}
+
+	@PutMapping("/update-expiry-status")
+	public ResponseEntity<String> updateAccountExpiryStatus(@RequestParam Long userId, @RequestParam boolean expire) {
+		userServiceImpl.updateAccountExpiryStatus(userId, expire);
+		return ResponseEntity.ok("Account expiry status updated");
+	}
+
+	@PutMapping("/update-enabled-status")
+	public ResponseEntity<String> updateAccountEnabledStatus(@RequestParam Long userId, @RequestParam boolean enabled) {
+		userServiceImpl.updateAccountEnabledStatus(userId, enabled);
+		return ResponseEntity.ok("Account enabled status updated");
+	}
+
+	@PutMapping("/update-credentials-expiry-status")
+	public ResponseEntity<String> updateCredentialsExpiryStatus(@RequestParam Long userId, @RequestParam boolean expire) {
+		userServiceImpl.updateCredentialsExpiryStatus(userId, expire);
+		return ResponseEntity.ok("Credentials expiry status updated");
+	}
+
+	@PutMapping("/update-password")
+	public ResponseEntity<String> updatePassword(@RequestParam Long userId, @RequestParam String password) {
+		try {
+			userServiceImpl.updatePassword(userId, password);
+			return ResponseEntity.ok("Password updated");
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+		}
+	}
 }
