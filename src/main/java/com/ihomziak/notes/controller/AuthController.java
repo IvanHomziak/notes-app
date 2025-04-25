@@ -184,4 +184,19 @@ public class AuthController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("Error sending password reset email"));
 		}
 	}
+
+	@PostMapping("/public/reset-password")
+	public ResponseEntity<?> forgotPassword(
+		@RequestParam String token,
+		@RequestParam String newPassword
+	) {
+		try {
+			userServiceImpl.resetPassword(token, newPassword);
+			return ResponseEntity.ok(new MessageResponse("Password reset successfully!"));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new MessageResponse("Error resetting password"));
+		}
+	}
 }

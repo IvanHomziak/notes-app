@@ -25,6 +25,20 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  # Reset Email Sender
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ...
+    password: ...
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+
 logging:
   level:
     org:
