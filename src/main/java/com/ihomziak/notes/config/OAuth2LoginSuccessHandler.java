@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.ihomziak.notes.models.AppRole;
@@ -124,6 +125,14 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 		String email = (String) attributes.get("email");
 		System.out.println("OAuth2LoginSuccessHandler: " + username + " : " + email);
 
+		Set<SimpleGrantedAuthority> authorities = oauth2User.getAuthorities().stream()
+			.map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
+			.collect(Collectors.toSet());
+
+		User user = userService.findByEmail(email)
+			.orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+		authorities.add(new SimpleGrantedAuthority(user.getRole().getRoleName().name()));
+
 		// Create UserDetailsImpl instance
 		UserDetailsImpl userDetails = new UserDetailsImpl(
 			null,
@@ -131,9 +140,7 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
 			email,
 			null,
 			false,
-			oauth2User.getAuthorities().stream()
-				.map(authority -> new SimpleGrantedAuthority(authority.getAuthority()))
-				.collect(Collectors.toList())
+			authorities
 		);
 
 		// Generate JWT token
