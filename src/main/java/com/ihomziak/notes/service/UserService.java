@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.ihomziak.notes.dto.UserDTO;
 import com.ihomziak.notes.models.User;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 public interface UserService {
 	void updateUserRole(Long userId, String roleName);
@@ -32,4 +33,12 @@ public interface UserService {
 	Optional<User> findByEmail(String email);
 
 	User registerUser(User newUser);
+
+	GoogleAuthenticatorKey generate2faSecretKey(Long userId);
+
+	boolean validate2faCode(Long userId, int code);
+
+	void enable2fa(Long userId);
+
+	void disable2fa(Long userId);
 }

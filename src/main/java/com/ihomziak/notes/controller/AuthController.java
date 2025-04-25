@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ihomziak.notes.models.AppRole;
 import com.ihomziak.notes.models.Role;
 import com.ihomziak.notes.models.User;
-import com.ihomziak.notes.repository.NoteRepository;
 import com.ihomziak.notes.repository.RoleRepository;
 import com.ihomziak.notes.repository.UserRepository;
 import com.ihomziak.notes.security.jwt.JwtUtils;
@@ -37,8 +36,12 @@ import com.ihomziak.notes.security.request.SignupRequest;
 import com.ihomziak.notes.security.response.LoginResponse;
 import com.ihomziak.notes.security.response.MessageResponse;
 import com.ihomziak.notes.security.response.UserInfoResponse;
+import com.ihomziak.notes.security.services.UserDetailsImpl;
 import com.ihomziak.notes.service.UserService;
+import com.ihomziak.notes.service.impl.TotpServiceImpl;
 import com.ihomziak.notes.service.impl.UserServiceImpl;
+import com.ihomziak.notes.util.AuthUtil;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 import jakarta.validation.Valid;
 
@@ -63,7 +66,14 @@ public class AuthController {
 
 	@Autowired
 	private UserService userService;
-	@Autowired private UserServiceImpl userServiceImpl;
+
+	@Autowired
+	private UserServiceImpl userServiceImpl;
+
+	@Autowired
+	AuthUtil authUtil;
+
+	@Autowired TotpServiceImpl totpServiceImpl;
 
 	@PostMapping("/public/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -81,7 +91,7 @@ public class AuthController {
 		// Set the authentication
 		SecurityContextHolder.getContext().setAuthentication(authentication);
 
-		UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+		UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
 		String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
@@ -197,6 +207,69 @@ public class AuthController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new MessageResponse("Error resetting password"));
+		}
+	}
+
+	@PostMapping("/enable-2fa")
+	public ResponseEntity<String> enable2FA() {
+		Long userId = authUtil.loggedInUserId();
+		GoogleAuthenticatorKey secret = userService.generate2faSecretKey(userId);
+
+		String qrCodeUrl = totpServiceImpl.getQrCodeUrl(secret,
+			userServiceImpl.getUserById(userId).getUserName()
+		);
+		return ResponseEntity.ok(qrCodeUrl);
+	}
+
+	@PostMapping("/disable-2fa")
+	public ResponseEntity<String> disable2FA() {
+		Long userId = authUtil.loggedInUserId();
+
+		userServiceImpl.disable2fa(userId);
+		return ResponseEntity.ok("2FA disabled successfully");
+	}
+
+	@PostMapping("/verify-2fa")
+	public ResponseEntity<String> verify2FA(@RequestParam int code) {
+		Long userId = authUtil.loggedInUserId();
+
+		boolean isValid = userService.validate2faCode(userId, code);
+
+		if (isValid) {
+			userService.enable2fa(userId);
+			return ResponseEntity.ok("2FA verified successfully");
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid 2FA code");
+		}
+	}
+
+	@GetMapping("/user/2fa-status")
+	public ResponseEntity<?> get2FAStatus() {
+		User user = authUtil.loggedInUser();
+
+		if (user != null) {
+			return ResponseEntity.ok().body(Map.of("2faEnabled", user.isTwoFactorEnabled()).toString());
+		} else {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("USER NOT FOUND");
+		}
+	}
+
+	@PostMapping("/public/verify-2fa-login")
+	public ResponseEntity<String> verify2FALogin(
+		@RequestParam int code,
+		@RequestParam String jwtToken
+	) {
+
+		String username = jwtUtils.getUserNameFromJwtToken(jwtToken);
+		User user = userService.findByUsername(username);
+
+		boolean isValid = userService.validate2faCode(user.getUserId(), code);
+
+		if (isValid) {
+			userService.enable2fa(user.getUserId());
+			return ResponseEntity.ok("2FA verified successfully");
+		} else {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid 2FA code");
 		}
 	}
 }

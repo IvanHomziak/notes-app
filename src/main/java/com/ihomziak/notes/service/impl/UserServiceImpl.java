@@ -21,6 +21,7 @@ import com.ihomziak.notes.repository.RoleRepository;
 import com.ihomziak.notes.repository.UserRepository;
 import com.ihomziak.notes.service.UserService;
 import com.ihomziak.notes.util.EmailService;
+import com.warrenstrange.googleauth.GoogleAuthenticatorKey;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -42,6 +43,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	EmailService emailService;
+
+	@Autowired
+	TotpServiceImpl totpService;
 
 	@Override
 	public void updateUserRole(Long userId, String roleName) {
@@ -189,5 +193,44 @@ public class UserServiceImpl implements UserService {
 		}
 
 		return userRepository.save(newUser);
+	}
+
+	@Override
+	public GoogleAuthenticatorKey generate2faSecretKey(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new RuntimeException("User not found"));
+
+		GoogleAuthenticatorKey key = totpService.generateSecret();
+		user.setTwoFactorSecret(key.getKey());
+		userRepository.save(user);
+		return key;
+	}
+
+	@Override
+	public boolean validate2faCode(Long userId, int code) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new RuntimeException("User not found"));
+
+		if (user.getTwoFactorSecret() == null) {
+			throw new RuntimeException("2FA is not enabled for this user");
+		}
+
+		return totpService.verifyCode(user.getTwoFactorSecret(), code);
+	}
+
+	@Override
+	public void enable2fa(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new RuntimeException("User not found"));
+		user.setTwoFactorEnabled(true);
+		userRepository.save(user);
+	}
+
+	@Override
+	public void disable2fa(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new RuntimeException("User not found"));
+		user.setTwoFactorEnabled(false);
+		userRepository.save(user);
 	}
 }
