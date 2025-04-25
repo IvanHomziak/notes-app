@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ihomziak.notes.models.AppRole;
@@ -37,6 +38,7 @@ import com.ihomziak.notes.security.response.LoginResponse;
 import com.ihomziak.notes.security.response.MessageResponse;
 import com.ihomziak.notes.security.response.UserInfoResponse;
 import com.ihomziak.notes.service.UserService;
+import com.ihomziak.notes.service.impl.UserServiceImpl;
 
 import jakarta.validation.Valid;
 
@@ -61,6 +63,7 @@ public class AuthController {
 
 	@Autowired
 	private UserService userService;
+	@Autowired private UserServiceImpl userServiceImpl;
 
 	@PostMapping("/public/signin")
 	public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
@@ -170,4 +173,15 @@ public class AuthController {
 		return (userDetails != null) ? userDetails.getUsername() : "";
 	}
 
+	@PostMapping("/public/forgot-password")
+	public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+		try {
+			userServiceImpl.generatePasswordResetToken(email);
+			return ResponseEntity.ok(new MessageResponse("Password reset email sent!"));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageResponse("Error sending password reset email"));
+		}
+	}
 }
