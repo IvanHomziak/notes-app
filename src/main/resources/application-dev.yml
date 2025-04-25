@@ -30,7 +30,7 @@ spring:
       platform: mysql
       mode: always
   datasource:
-    url: jdbc:mysql://localhost:3307/${DB_NAME:securenotes}?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
   jpa:
