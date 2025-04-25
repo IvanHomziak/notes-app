@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+import com.ihomziak.notes.config.OAuth2LoginSuccessHandler;
 import com.ihomziak.notes.models.AppRole;
 import com.ihomziak.notes.models.Role;
 import com.ihomziak.notes.models.User;
@@ -39,6 +41,10 @@ public class SecurityConfig {
 	@Autowired
 	private AuthEntryPointJwt unauthorizedHandler;
 
+	@Autowired
+	@Lazy
+	private OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+
 	@Bean
 	public AuthTokenFilter authenticationJwtTokenFilter() {
 		return new AuthTokenFilter();
@@ -57,11 +63,15 @@ public class SecurityConfig {
 
 		http.authorizeHttpRequests((requests)
 			-> requests
-			.requestMatchers("/api/admin/**").hasRole("ADMIN")
-			.requestMatchers("/api/csrf-token").permitAll()
-			.requestMatchers("/public/**").permitAll()
-			.requestMatchers("/api/auth/public/**").permitAll()
-			.anyRequest().authenticated());
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
+				.requestMatchers("/api/csrf-token").permitAll()
+				.requestMatchers("/public/**").permitAll()
+				.requestMatchers("/api/auth/public/**").permitAll()
+				.requestMatchers("/oauth2/**").permitAll()
+				.anyRequest().authenticated())
+				.oauth2Login(oauth2 -> {
+					oauth2.successHandler(oAuth2LoginSuccessHandler);
+				});
 		http.exceptionHandling(exception
 			-> exception.authenticationEntryPoint(unauthorizedHandler));
 		http.addFilterBefore(

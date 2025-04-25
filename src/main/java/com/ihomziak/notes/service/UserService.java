@@ -1,6 +1,7 @@
 package com.ihomziak.notes.service;
 
 import java.util.List;
+import java.util.Optional;
 
 import com.ihomziak.notes.dto.UserDTO;
 import com.ihomziak.notes.models.User;
@@ -27,4 +28,8 @@ public interface UserService {
 	void generatePasswordResetToken(String email);
 
 	void resetPassword(String token, String newPassword);
+
+	Optional<User> findByEmail(String email);
+
+	User registerUser(User newUser);
 }
